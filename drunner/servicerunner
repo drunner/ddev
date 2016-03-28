@@ -59,18 +59,16 @@ function isrepo {
    )
 }
 
-function isdev {
-   local BRANCH=$(cd "$1" ; git rev-parse --abbrev-ref HEAD 2>/dev/null)
-   [ "$BRANCH" = "dev" ]
-}
-
-
 #---------------------------------------------------------------------------------
 
 function info_low {
    sayinfo "DSERVICE:       $DSERVICE"
    sayinfo "BUILDNAME:      $BUILDNAME"
-   sayinfo "FULLNAME:       $BRANCHEDIMAGENAME"
+   if [[ -v BRANCH ]]; then
+      sayinfo "SOURCE BRANCH:  $BRANCH"
+   else
+      sayinfo "SOURCE BRANCH:  Not a git repo."
+   fi
    sayinfo "DEVSERVICENAME: $DEVSERVICENAME"
    sayinfo "DIRECTORY:      $1"
    return 0
@@ -80,23 +78,21 @@ function info_low {
 
 
 function build_low {
-   P="$1"
-   [ -e "$P/Dockerfile" ] || { saybad "No Dockerfile in $P, it's not a valid dService!" ; return 1 ; }
-   echo "Building ${BRANCHEDIMAGENAME}..."
-   cd "$P" ; docker build -t "${BRANCHEDIMAGENAME}" . && saygood "Built ${BRANCHEDIMAGENAME}"
-
-   if [ "$BASEIMAGENAME" = "drunner/install-support" ]; then
-      echo " "
-      drunner update && saygood "Drunner updated with install-support:dev just built."
-   elif [ -n "$DEVSERVICENAME" ] && isdev "$P" ; then
-      echo " "
-      drunner status "$DEVSERVICENAME" >/dev/null 2>&1
-      if [ $? -ne 0 ]; then
-         drunner install "$BRANCHEDIMAGENAME" "$DEVSERVICENAME" || { saybad "Couldn't install ${DEVSERVICENAME}" ; return 1 ; }
-         drunner status "$DEVSERVICENAME" || { saybad "Couldn't install ${DEVSERVICENAME}" ; return 1 ; }
-      fi
-      drunner recover "$DEVSERVICENAME" "$BRANCHEDIMAGENAME" && saygood "drunner updated with $BRANCHEDIMAGENAME as service $DEVSERVICENAME"
+   cd "$1"
+   [ -e "Dockerfile" ] || { saybad "No Dockerfile, it's not a valid dService!" ; return 1 ; }
+   if [ -z BRANCH ]; then
+      echo "Building ${BASEIMAGENAME}"
+   else
+      echo "Building ${BASEIMAGENAME} from branch ${BRANCH}"
    fi
+   docker build -t "${BASEIMAGENAME}" . && saygood "Built ${BASEIMAGENAME}"
+
+   [ -n "$DEVSERVICENAME" ] || { sayinfo "Not a dService so finished."; return 0; }
+   [ "$BRANCH" != "master" ] || { sayinfo "Branch is master, so not auto-installing."; return 0; }
+
+   drunner recover "$DEVSERVICENAME" "$BASEIMAGENAME"
+   drunner status "$DEVSERVICENAME"
+   saygood "dService $DEVSERVICENAME updated from just built $BASEIMAGENAME (branch ${BRANCH})"
 }
 
 #---------------------------------------------------------------------------------
@@ -137,11 +133,9 @@ function run1cmd {
    [ "$DEVSERVICENAME" != "notset" ] || { saybad "DEVSERVICENAME must be set to empty string or service name in $THEDIR/ddev.sh." ; return 1 ;}
 
    BASEIMAGENAME="$BUILDNAME"
-   BRANCHEDIMAGENAME="$BUILDNAME"
-   if isrepo "$THEDIR" ; then
-      local BRANCH=$(cd "$THEDIR" ; git rev-parse --abbrev-ref HEAD 2>/dev/null)
-      [ "$BRANCH" = "master" ] || BRANCHEDIMAGENAME="${BUILDNAME}:${BRANCH}"
-   fi
+   BRANCH=$(cd "$THEDIR" ; git rev-parse --abbrev-ref HEAD 2>/dev/null)
+   [ $? ] || BRANCH=""
+
    info_low "$THEDIR"
    [ "$THECMD" = "info_low" ] || "$THECMD" "$THEDIR"
 }
