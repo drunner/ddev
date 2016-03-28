@@ -87,9 +87,11 @@ function build_low {
    fi
    docker build -t "${BASEIMAGENAME}" . && saygood "Built ${BASEIMAGENAME}"
 
-   [ -n "$DEVSERVICENAME" ] || { sayinfo "Not a dService so finished."; return 0; }
-   [ "$BRANCH" != "master" ] || { sayinfo "Branch is master, so not auto-installing."; return 0; }
+   [ "$DSERVICE" = "yes" ] || { sayinfo "Not a dService, so we're all done."; return 0; }
+   [ -n "$DEVSERVICENAME" ] || { sayinfo "DEVSERVICENAME not defined, not attempting to install."; return 0; }
+   #[ "$BRANCH" != "master" ] || { sayinfo "Branch is master, so not auto-installing."; return 0; }
 
+   sayinfo "Installing as ${DEVSERVICENAME}"
    drunner recover "$DEVSERVICENAME" "$BASEIMAGENAME"
    drunner status "$DEVSERVICENAME"
    saygood "dService $DEVSERVICENAME updated from just built $BASEIMAGENAME (branch ${BRANCH})"
@@ -98,15 +100,15 @@ function build_low {
 #---------------------------------------------------------------------------------
 
 function check_low {
-   [ "$DSERVICE" = "yes" ] || { sayinfo "$1 - skipping non-dService $BRANCHEDIMAGENAME." ; return 1 ; }
-   drunner checkimage "$BRANCHEDIMAGENAME" && saygood "$BRANCHEDIMAGENAME is valid."
+   [ "$DSERVICE" = "yes" ] || { sayinfo "$1 - skipping non-dService $BASEIMAGENAME." ; return 1 ; }
+   drunner checkimage "$BASEIMAGENAME" && saygood "$BASEIMAGENAME is valid."
 }
 
 #---------------------------------------------------------------------------------
 
 function test_low {
-   [ "$DSERVICE" = "yes" ] || { sayinfo "$1 - skipping non-dService $BRANCHEDIMAGENAME." ; return 0 ; }
-   dtest test "$BRANCHEDIMAGENAME"
+   [ "$DSERVICE" = "yes" ] || { sayinfo "$1 - skipping non-dService $BASEIMAGENAME." ; return 0 ; }
+   dtest test "$BASEIMAGENAME"
 }
 
 #---------------------------------------------------------------------------------
