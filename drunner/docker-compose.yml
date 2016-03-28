@@ -1,8 +1,0 @@
-version: '2'
-
-# no actual services for ddev.
-
-volumes:
-   config:
-      external:
-         name: "drunner-${SERVICENAME}-config"
