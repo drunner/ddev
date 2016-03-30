@@ -92,7 +92,7 @@ function build_low {
    #[ "$BRANCH" != "master" ] || { sayinfo "Branch is master, so not auto-installing."; return 0; }
 
    sayinfo "Installing as ${DEVSERVICENAME}"
-   drunner recover "$DEVSERVICENAME" "$BASEIMAGENAME"
+   drunner -d -v recover "$DEVSERVICENAME" "$BASEIMAGENAME"
    drunner status "$DEVSERVICENAME"
    saygood "dService $DEVSERVICENAME updated from just built $BASEIMAGENAME (branch ${BRANCH})"
 }
