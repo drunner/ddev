@@ -110,7 +110,7 @@ function check_low {
 
 function test_low {
    [ "$DSERVICE" = "yes" ] || { sayinfo "$1 - skipping non-dService $BASEIMAGENAME." ; return 0 ; }
-   dtest test "$BASEIMAGENAME"
+   dtest test -d "$BASEIMAGENAME"
 }
 
 #---------------------------------------------------------------------------------
