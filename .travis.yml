@@ -6,6 +6,6 @@ before_install:
    - /bin/bash install_drunner_travis.sh
 
 script:
-   - docker build -t "drunner/ddev"
+   - docker build -t "drunner/ddev" .
    - drunner recover -d -v drunner/ddev ddev
    - ddev test
