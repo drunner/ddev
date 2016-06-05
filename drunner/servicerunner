@@ -103,7 +103,7 @@ function build_low {
 
 function check_low {
    [ "$DSERVICE" = "yes" ] || { sayinfo "$1 - skipping non-dService $BASEIMAGENAME." ; return 1 ; }
-   drunner checkimage "$BASEIMAGENAME" && saygood "$BASEIMAGENAME is valid."
+   drunner -d checkimage "$BASEIMAGENAME" && saygood "$BASEIMAGENAME is valid."
 }
 
 #---------------------------------------------------------------------------------
