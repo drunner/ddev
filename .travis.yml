@@ -7,5 +7,5 @@ before_install:
 
 script:
    - docker build -t "drunner/ddev" .
-   - drunner recover -d -v drunner/ddev ddev
+   - drunner recover -d -v ddev drunner/ddev
    - ddev test
